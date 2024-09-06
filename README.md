@@ -1,7 +1,16 @@
-# AceMagic-S1-LED-TFT-Linux
-ACEMAGIC S1 Mini LCD/LED Control for Linux
+# AceMagic-Embedded
+Copy of: [ACEMAGIC S1 Mini LCD/LED Control for Linux](https://github.com/tjaworski/AceMagic-S1-LED-TFT-Linux)
+Adapting for: Macro-Keys Detection & Microphone Recording and Voice to Text Transformation and Submission to GPT OpenAI API
 
-# First: My Rant
+## TODO
+- Finish the install_prerequisite & install_suricata_prerequisite
+- Finish the microphone_device & macrokeys_device
+- Finish the gpt_cli_module & speaker_module
+- Finish the ids_stats, interactions & alerts
+- Adapt the Readme (move docs to sub-readme)
+- Validate / Fix Salt and Github Actions
+
+### First: My Rant
 
 While this mini PC offers impressive features, the absence of information regarding the TFT front screen and LED strip is frustrating. Despite being advertised as 'with DIY LCD Display' on Amazon, the lack of Linux support is disappointing. My objective is to enable control of these components in Linux, facilitating integration with projects like Batocera.linux. 
 
@@ -17,13 +26,13 @@ I don't really trust reviews from people who received gadgets for free in exchan
 > [!TIP]
 > If techie stuff makes your eyes glaze over, feel free to jump straight into the fun part with the [s1panel](s1panel/README.md) app!
 
-## LED Strip
+#### LED Strip
 
 The LED strip from what I gather is controlled by the USB-SERIAL CH340.
 
 ![alt text](images/ch340.png?raw=true)
 
-## TFT-LCD Display
+#### TFT-LCD Display
 
 The TFT-LCD display is controlled via the USB HID device. the control board has a Holtek HT32 chip on it. There is some firmware doing the drawing. 
 
@@ -48,11 +57,11 @@ as you can see in the photo below, the sample traffic sent to the device:
 
 ![alt text](images/capture1.png?raw=true)
 
-## commands for TFT screen
+#### commands for TFT screen
 
 all commands have an 8 byte header. total buffer sent is always 4104 bytes, that is 8 bytes for header, and 4096 for data. the header always starts with a signature byte (0x55), followed by command byte and a sub command byte. 
 
-#### set_orientation (0xA1 0xF1)
+###### set_orientation (0xA1 0xF1)
 
 ```c++
 struct set_orientation {
@@ -71,7 +80,7 @@ data look like this:
 
 the "Disconnection, content information display will not be allowed!" will show correct orientation
 
-#### set_time (0xA1 0xF2)
+###### set_time (0xA1 0xF2)
 
 this is used to keep the internal clock updated and as a heartbeat..
 
@@ -93,7 +102,7 @@ data looks like this:
 55 a1 f2 0e 1c 2e 00 00    2:28:46
 ```
  
-#### redraw (0xA3)
+###### redraw (0xA3)
 
 bitblt the entire screen
 
@@ -143,7 +152,7 @@ data looks like this (image data omited):
 > [!WARNING]
 > The offset field is ignored since it wraps around back to 0 at sequence 0x11. I am assuming the firmware will use the sequence to figure out the offset. 
 
-#### update (0xA2)
+###### update (0xA2)
 
 bitblt portion of the framebuffer at x,y coordinates. this will send small image data to update, this data can be anything. because the framebuffer is slow, this is used to update portions of the framebuffer quickly.
 
@@ -173,7 +182,7 @@ data looks like this (image data omited):
 > [!TIP]
 > You can find the js code for the LCD [here](s1panel/lcd_device.js).
 
-## Image Data
+#### Image Data
 
 the screen is a 320 x 170 x 2 (16-bit color) framebuffer. the 0,0 is upper right when in portrait orientation, or upper left when in landscape. the pixel format is RGB565. had to do an endian swap when setting the pixel.
 
@@ -269,7 +278,7 @@ With the update function, Some cool animations can be done. Although I did notic
 ![alt text](images/animation1.gif?raw=true)
 ![alt text](images/animation2.gif?raw=true)
 
-## Commands for LED strip
+#### Commands for LED strip
 
 the LED strip uses a 5 byte buffer, with a signature 0xfa followed by theme, intensity, speed and a checksum. you open the device like a regular serial port and write bytes to it.
 
@@ -282,7 +291,7 @@ struct led_command {
     uint8_t checksum;
 };
 ```
-#### theme
+###### theme
 ```
 0x01 = rainbow
 0x02 = breathing
@@ -290,7 +299,7 @@ struct led_command {
 0x04 = off
 0x05 = automatic
 ```
-#### intensity
+###### intensity
 ```
 0x01 = level 5
 0x02 = level 4
@@ -298,7 +307,7 @@ struct led_command {
 0x04 = level 2
 0x05 = level 1
 ```
-#### speed
+###### speed
 ```
 0x01 = level 5
 0x02 = level 4
@@ -306,7 +315,7 @@ struct led_command {
 0x04 = level 2
 0x05 = level 1
 ```
-#### checksum
+###### checksum
 
 ```
 crc = LSB(signature + theme + intensity + speed)
@@ -317,7 +326,7 @@ turning off the LED strip you will need to send the intesity and speed too.
 > [!TIP]
 > You can find the js code for the LED [here](s1panel/led_device.js).
 
-## Flow
+#### Flow
 
 - set_orientation
 - set_time
@@ -331,7 +340,7 @@ turning off the LED strip you will need to send the intesity and speed too.
 - heartbeat
 etc...
 
-## Putting it all together
+#### Putting it all together
 
 I finaly received my 1TB WD_BLACK Gen4 NVME and installed the latest ubuntu 23.10, so I can try playing around with this using node.js. I am able to connect using [node-hid](https://github.com/node-hid/node-hid) and use the [node-canvas](https://github.com/Automattic/node-canvas) to draw and write text. I'm also looking at [chartjs-node-canvas](https://github.com/SeanSobey/ChartjsNodeCanvas) for the graphs.
 
@@ -364,7 +373,7 @@ Here is a sample of 7pt to 24pt Arial font:
 as for the sensors on this S1, using the lm_sensors it only discovers the coretemp:
 
 ```terminal
-# sensors
+### sensors
 nvme-pci-0100
 Adapter: PCI adapter
 Composite:    +49.9°C  (low  = -40.1°C, high = +83.8°C)
@@ -381,7 +390,7 @@ Core 2:        +42.0°C  (high = +105.0°C, crit = +105.0°C)
 Core 3:        +42.0°C  (high = +105.0°C, crit = +105.0°C)
 ```
 
-### UPDATE 2024-4-11 on the FAN speed: 
+##### UPDATE 2024-4-11 on the FAN speed: 
 
 Upon opening my S1 mini to locate the fan's connection point, I unplugged it to trace the wires. To my surprise, the fan speed indicator remained at 1000. Curiously, I stress-tested the CPU, and despite the fan being off and disconnected, the fan RPM increased. This experience solidifies my belief that the fan speed indication is <strong>BS</strong>. Quite disappointing, indeed.
 
@@ -390,21 +399,21 @@ Upon opening my S1 mini to locate the fan's connection point, I unplugged it to 
 <img src="images/fan2.png" data-canonical-src="images/fan2.png" width="400" />
 </div>
 
-### Final Thoughts
+##### Final Thoughts
 
 This mini PC is manufactured and sold by Shenzhen CYX Industrial Co., Ltd., but OEMed by Acemagic. You can find N95 models on Alibaba and similar marketplaces for as little as $100 (with a minimum order quantity of 50), and you can even get your name slapped on the side of it. However, I purchased my three units on Amazon for around $230 each. Although mine are the N97 models, I'm sure Acemagic still managed to turn a decent profit on these. Overall, I like this machine! the N97 is a low power mobile processor, and for a retro gaming and development it is pretty decent. What I don't understand is why they invested so much in developing the front screen LCD and even gave us control over the LED strip, yet they couldn't figure out how to connect the FAN so we can read the RPMs. 
 
-#### Advantages
+###### Advantages
 1. Love that you can stand it up. takes less space on desk.
 2. The front LCD screen can display what ever you want.  
 
-#### Disadvantages
+###### Disadvantages
 1. LCD screen needs more functionality, like the ability to turn it off (like you can with the LED strip)
 2. Ability to read the Cooling FAN speed is missing. 
 
 
 
-## Addendum
+#### Addendum
 
 You ever wondered what that little window on the side is for? The original image released for S1 actually showed RGB lights through it:
 
@@ -425,7 +434,7 @@ You can actually buy an SSD with RGB lights, and I was able to find a couple of 
 I haven't tested the above, nor do I endorse them, but if you really want to pimp your S1 out, any gaming SSD with RGB lights should work (up to Gen 4 - NVMe M.2 2280) :smile:
 
 
-## Additional Documentation and Acknowledgments
+#### Additional Documentation and Acknowledgments
 
 * WireShark
 * IDA

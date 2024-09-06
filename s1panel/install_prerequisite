@@ -1,0 +1,99 @@
+#!/bin/bash
+##########################################################
+# Script to be called by Salt Master. (a minion script)
+##########################################################
+
+# Ensure that the necessary USB device environment variables are set, with default fallbacks
+MACRO_DEVICE_NAME=${MACRO_USB_DEVICE:-"SayoDevice"}
+MICROPHONE_DEVICE_NAME=${MICROPHONE_USB_DEVICE:-"DefaultMicrophoneDevice"}
+SPEAKER_DEVICE_NAME=${SPEAKER_USB_DEVICE:-"DefaultSpeakerDevice"}
+TIMEZONE=${TIMEZONE:-"America/Toronto"}
+
+# Ensure the OPENAI_API_KEY is set
+if [ -z "$OPENAI_API_KEY" ]; then
+  echo "ERROR: OPENAI_API_KEY environment variable not set."
+  exit 1
+fi
+
+# Function to check if an environment variable exists in .bashrc
+ensure_bashrc_var() {
+    local var_name=$1
+    local var_value=$2
+    local bashrc="$HOME/.bashrc"
+
+    # Check if the variable is already in .bashrc
+    if ! grep -q "^export $var_name=" "$bashrc"; then
+        echo "Adding $var_name to $bashrc"
+        echo "export $var_name=\"$var_value\"" >> "$bashrc"
+        source "$bashrc"
+    else
+        echo "$var_name is already set in $bashrc"
+    fi
+}
+
+# Ensure environment variables are persistent by adding them to .bashrc
+ensure_bashrc_var "MACRO_USB_DEVICE" "$MACRO_DEVICE_NAME"
+ensure_bashrc_var "MICROPHONE_USB_DEVICE" "$MICROPHONE_DEVICE_NAME"
+ensure_bashrc_var "SPEAKER_USB_DEVICE" "$SPEAKER_DEVICE_NAME"
+ensure_bashrc_var "OPENAI_API_KEY" "$OPENAI_API_KEY"
+
+# Python Prerequisite
+sudo apt update
+sudo apt install python3 python3-pip -y
+
+# GPT Prerequisite
+pip install gpt-command-line
+
+# Node Version Manager (fnm)
+curl -FsSL https://fnm.vercel.app/install | bash
+fnm use --install-if-missing 20
+
+# Copy Node to static location
+sudo cp $(which node) /usr/bin/node
+sudo cp $(which npm) /usr/bin/npm
+
+# Set Timezone
+timedatectl set-timezone $TIMEZONE
+
+# Audio Prerequisite
+pip3 install gtts
+sudo apt install ffmpeg alsa-utils -y
+sudo ffmpeg -sources
+
+# Function to generate a udev rule for a given device name
+get_usb_rule() {
+    local device_name=$1
+    # Get the device ID based on the device name from lsusb output
+    retrieved_id=$(lsusb | grep -oE ".*$device_name" | awk '{print $6}')
+    
+    if [ -z "$retrieved_id" ]; then
+        echo "ERROR: Device with name $device_name not found via lsusb."
+        return 1
+    fi
+
+    # Generate the udev rule
+    echo "SUBSYSTEM==\"usb\", ATTRS{idVendor}==\"${retrieved_id:0:4}\", ATTRS{idProduct}==\"${retrieved_id:5:4}\", MODE=\"0666\""
+}
+
+# Apply the udev rule if the device is detected
+apply_usb_rule() {
+    local device_name=$1
+    local rule=$(get_usb_rule "$device_name")
+
+    if [ -n "$rule" ]; then
+        sudo sh -c "echo $rule > /etc/udev/rules.d/99-${device_name}.rules"
+        sudo udevadm control --reload-rules
+        sudo udevadm trigger
+        echo "Udev rule created for $device_name."
+    else
+        echo "WARNING: No udev rule created for $device_name."
+    fi
+}
+
+# Apply the udev rules for the specified devices
+apply_usb_rule "$MACRO_DEVICE_NAME"
+apply_usb_rule "$MICROPHONE_DEVICE_NAME"
+apply_usb_rule "$SPEAKER_DEVICE_NAME"
+
+echo "Installed Main Prerequisites"
+./install_suricata_prerequisite

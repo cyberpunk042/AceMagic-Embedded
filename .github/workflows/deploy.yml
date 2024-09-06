@@ -1,0 +1,35 @@
+name: Deploy to Minions
+
+# Trigger the pipeline on release creation or manual workflow dispatch
+on:
+  release:
+    types: [published]
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Step 1: Checkout the latest code from the repository (optional, but good practice)
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: SSH into Salt Master and apply the Salt state
+      - name: Deploy via Salt Master
+        env:
+          SALT_MASTER_IP: ${{ secrets.SALT_MASTER_IP }} # IP of Salt master (from GitHub Secrets)
+          SALT_USER: ${{ secrets.SALT_USER }} # Username to log into the Salt master (from GitHub Secrets)
+          SALT_KEY: ${{ secrets.SALT_KEY }} # Private key for authentication (from GitHub Secrets)
+        run: |
+          # Add the Salt Master's IP to known hosts to prevent SSH prompt
+          ssh-keyscan -H $SALT_MASTER_IP >> ~/.ssh/known_hosts
+
+          # Add the SSH private key to authenticate to Salt Master
+          echo "$SALT_KEY" | tr -d '\r' | ssh-add - > /dev/null
+
+          # SSH into the Salt Master and apply the Salt state to the minions
+          ssh -i ~/.ssh/id_rsa $SALT_USER@$SALT_MASTER_IP "sudo salt '*' state.apply checkout_and_install"
+
+      # Step 3: Notify on Success (optional)
+      - name: Notify Success
+        run: echo "Deployment to Salt Minions successful!"

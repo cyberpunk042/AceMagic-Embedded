@@ -1,0 +1,31 @@
+#!/bin/bash
+##########################################################
+# Script to install prerequisites and configure Suricata
+##########################################################
+
+# Update system and install Suricata and UFW
+sudo apt update && sudo apt install -y suricata ufw
+
+# Automatically detect the primary network interface (ignores loopback and virtual interfaces)
+INTERFACE=$(ip route get 1.1.1.1 | awk '{print $5}' | head -n 1)
+
+if [ -z "$INTERFACE" ]; then
+  echo "ERROR: Could not detect network interface. Please configure Suricata manually."
+  exit 1
+fi
+
+# Configure Suricata to monitor the detected network interface
+sudo sed -i "s/interface: eth0/interface: $INTERFACE/" /etc/suricata/suricata.yaml
+
+# Start and enable the Suricata service
+sudo systemctl start suricata
+sudo systemctl enable suricata
+
+# Enable UFW (Uncomplicated Firewall) and allow SSH
+sudo ufw enable
+sudo ufw allow ssh
+
+# Update Suricata rules
+sudo suricata-update
+
+echo "Suricata setup complete. Monitoring interface: $INTERFACE"
