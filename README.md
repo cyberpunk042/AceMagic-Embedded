@@ -1,6 +1,7 @@
 # AceMagic-Embedded
-Copy of: [ACEMAGIC S1 Mini LCD/LED Control for Linux](https://github.com/tjaworski/AceMagic-S1-LED-TFT-Linux)
-Adapting for: Macro-Keys Detection & Microphone Recording and Voice to Text Transformation and Submission to GPT OpenAI API
+Copy of: [ACEMAGIC S1 Mini LCD/LED Control for Linux](https://github.com/tjaworski/AceMagic-S1-LED-TFT-Linux)  
+Adapting for: Macro-Keys Detection & Microphone Recording and Voice to Text Transformation and Submission to GPT OpenAI API  
+Integrating: Suricata IDS (Intrusion Detection System) with integrated display status update and alerting and notifications.
 
 ## TODO
 - Finish the install_prerequisite & install_suricata_prerequisite
