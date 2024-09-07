@@ -56,12 +56,7 @@ async function handleDevice(device) {
 
                 // Listen for data (key press/release)
                 hidDevice.on('data', (data) => {
-                    const action = parseHIDData(data);
-                    if (action) {
-                        logger.info(`Action detected: ${action}`);
-                    } else {
-                        logger.info('Unknown data received:', data);
-                    }
+                    handleHIDData(data);
                 });
 
                 hidDevice.on('error', (err) => {
@@ -96,18 +91,40 @@ function getStringDescriptor(device, iDescriptor) {
     });
 }
 
-// Helper function to parse HID data (press/release)
-function parseHIDData(data) {
-    // Assuming the data contains key press/release info
-    // Replace with your specific logic to parse data from the HID device
-    const key = data[0]; // Example: first byte contains the key
-    const isPressed = data[1] === 1; // Example: second byte indicates press/release
+// Helper function to handle HID data and call specific functions for press/release
+/*
+ * This function handles the raw data from the HID device and calls the appropriate function
+ * depending on whether the key is pressed or released.
+ *
+ * Example:
+ * - data[0]: Represents the key code or button identifier.
+ * - data[1]: Represents the key state (e.g., 1 for pressed, 0 for released).
+ */
+function handleHIDData(data) {
+    const key = data[0]; // First byte may contain the key/button identifier
+    const state = data[1]; // Second byte typically represents the state (pressed/released)
 
-    if (isPressed) {
-        return `Key ${key} pressed`;
+    if (state === 1) {
+        // Key press detected, call the press action
+        onPress(key);
+    } else if (state === 0) {
+        // Key release detected, call the release action
+        onRelease(key);
     } else {
-        return `Key ${key} released`;
+        logger.info('Unknown state detected in HID data:', data);
     }
+}
+
+// Function to call on key press
+function onPress(key) {
+    logger.info(`Key ${key} pressed`);
+    // Add your custom logic for handling key press here
+}
+
+// Function to call on key release
+function onRelease(key) {
+    logger.info(`Key ${key} released`);
+    // Add your custom logic for handling key release here
 }
 
 module.exports = {
