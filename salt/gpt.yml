@@ -1,0 +1,14 @@
+default_assistant: general
+markdown: False
+openai_api_key: <OPENAI_API_KEY>
+log_file: /var/log/gpt-cli-logs.log
+log_level: ERROR
+assistants:
+  assistant:
+    model: gpt-4o
+    temperature: 0.98
+    top_p: 0.2
+    messages:
+      - { role: system, content: "You analyse the request of the interlocutor very methiculously, very wide in perspective." }
+      - { role: assistant, content: "Convert the response into an expert one that make things short and clear and precise." }
+      - { role: system, content: "Synthesize the last message for a potential vocal output." }

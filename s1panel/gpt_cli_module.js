@@ -52,7 +52,11 @@ function sendToGptCli(transcript) {
         }
 
         // Prepare the GPT-CLI command
-        const gptCommand = `gpt --prompt "${transcript}" general`;
+        const gptCommand = `gpt --prompt "${transcript}" assistant`; 
+        // assistant (default interpreter for the vocal)
+        // alert-generator & tool to update status(a file on fs?)
+        // email-generator & email-sender combined?(use email tool?)
+        // ticket-creator & ticket-manager combined?(use a tool?)
 
         // Execute the GPT-CLI command
         exec(gptCommand, (error, stdout, stderr) => {

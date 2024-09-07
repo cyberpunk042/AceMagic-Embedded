@@ -610,6 +610,34 @@ function lcd_thread_status(state, theme, message) {
     }
 }
 
+
+function microphone_thread_update_status(state, message) {
+    // TODO: generate the messages inside the macrokey thread for the microphone thread
+    // TODO: align with the internal functions and flexibility
+    if (state.listening && message.complete) {
+        if ('END' === message.type) {
+            state.done_listening(state);
+            //TODO: Update display with rec end icon
+            state.translate_vocal(state);
+            //TODO: Update display with translation in progress icon
+            state.sendTextToGPTCli(state)
+            //TODO: Update display with sending to GPT in progress icon
+            state.listening = false;
+        }
+    } else if ('START' === message.type) {
+        state.listening = true;
+        state.start_listening(state);
+        //TODO: Update display with rec icon
+    }
+
+}
+
+
+function init_macrokeys_thread(state) {
+    state.macrokeys_thread.postMessage({ listen: True });
+    state.macrolistening = true;
+}
+
 function main() {
 
     load_config('config.json').then(config => {
@@ -649,6 +677,8 @@ function main() {
 
                 led_thread         : new threads.Worker('./led_thread.js', { workerData: config.led_config }),
                 lcd_thread         : new threads.Worker('./lcd_thread.js', { workerData: { device: config.device, poll: config.poll, refresh: config.refresh, heartbeat: config.heartbeat }}),  
+                macrokeys_thread   : new threads.Worker('./macrokeys_thread.js', { workerData: config.macrokeys}),  
+                microphone_thread   : new threads.Worker('./microphone_thread.js', { workerData: config.microphone}),  
 
                 unsaved_changes    : false,
 
@@ -680,6 +710,23 @@ function main() {
         
                     start_draw_canvas(_state, config, theme);
                 });
+
+                logger.info('base initialization complete');
+
+
+                // Listen to macro keys for device interactions.
+                init_macrokeys_thread(_state);
+
+                // Listen to the microphone toggle for device interactions.
+                _state.macrokeys_thread.on('message', message => {
+                    //TODO: TEST with this and see what we have in the log with the device.
+                    microphone_thread_update_status(_state, message);
+                });
+
+                // Track microphone device interactions responses.
+                //_state.microphone_thread.on('message', message => {
+                //    microphone_thread_handle_message(_state, theme, message);
+                //});
             
             }, err => {
                 

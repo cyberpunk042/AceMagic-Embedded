@@ -5,8 +5,8 @@
 
 # Ensure that the necessary USB device environment variables are set, with default fallbacks
 MACRO_DEVICE_NAME=${MACRO_USB_DEVICE:-"SayoDevice"}
-MICROPHONE_DEVICE_NAME=${MICROPHONE_USB_DEVICE:-"DefaultMicrophoneDevice"}
-SPEAKER_DEVICE_NAME=${SPEAKER_USB_DEVICE:-"DefaultSpeakerDevice"}
+MICROPHONE_DEVICE_NAME=${MICROPHONE_USB_DEVICE:-"PCM2902"}
+SPEAKER_DEVICE_NAME=${SPEAKER_USB_DEVICE:-""}
 TIMEZONE=${TIMEZONE:-"America/Toronto"}
 
 # Ensure the OPENAI_API_KEY is set
@@ -39,6 +39,7 @@ ensure_bashrc_var "OPENAI_API_KEY" "$OPENAI_API_KEY"
 
 # Python Prerequisite
 sudo apt update
+sudo apt install usbutils -y
 sudo apt install python3 python3-pip -y
 
 # GPT Prerequisite
@@ -59,6 +60,8 @@ timedatectl set-timezone $TIMEZONE
 pip3 install gtts
 sudo apt install ffmpeg alsa-utils -y
 sudo ffmpeg -sources
+sudo aplay -l
+sudo arecord -l
 
 # Function to generate a udev rule for a given device name
 get_usb_rule() {
@@ -96,4 +99,4 @@ apply_usb_rule "$MICROPHONE_DEVICE_NAME"
 apply_usb_rule "$SPEAKER_DEVICE_NAME"
 
 echo "Installed Main Prerequisites"
-./install_suricata_prerequisite
+# ./install_suricata_prerequisite # Only if not on SELKS stack !?

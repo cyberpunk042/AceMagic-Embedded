@@ -6,8 +6,8 @@ Integrating: Suricata IDS (Intrusion Detection System) with integrated display s
 ## TODO
 - Finish the install_prerequisite & install_suricata_prerequisite
 - Finish the microphone_device & macrokeys_device
+- Finish the ids_status, interactions & alerts
 - Finish the gpt_cli_module & speaker_module
-- Finish the ids_stats, interactions & alerts
 - Adapt the Readme (move docs to sub-readme)
 - Validate / Fix Salt and Github Actions
 

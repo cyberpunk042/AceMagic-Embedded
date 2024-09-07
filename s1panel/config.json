@@ -79,5 +79,11 @@
       "speed": 3,
       "intensity": 3
    },
+   "macrokeys": {
+      "key": "value"
+   },
+   "microphone": {
+      "key": "value"
+   },
    "portrait": true
 }
