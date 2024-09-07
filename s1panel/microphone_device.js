@@ -5,10 +5,9 @@
  * Copyright (c) 2024 Cyberpunk042
  * GPL-3 Licensed
  */
-
-import whisper from 'whisper-node';
-import fs from 'fs';
-import { exec } from 'child_process';
+const whisper = require('whisper-node');
+const fs = require('fs');
+const { exec } = require('child_process');
 const { sendToGptCli } = require('./gpt_cli_module.js');
 const logger = require('./logger');
 
