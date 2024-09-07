@@ -56,8 +56,11 @@ async function handleDevice(device) {
 
                 // Listen for data (key press/release)
                 hidDevice.on('data', (data) => {
-                    logger.info(`Data received: ${data}`);  // Log the entire data buffer for inspection
-                    handleHIDData(data);
+                    // Convert blob data to readable array
+                    const dataArray = Array.from(data).map(byte => byte.toString(16));
+                    logger.info(`Data received: ${dataArray}`);  // Log the data array for inspection
+
+                    handleHIDData(dataArray);
                 });
 
                 hidDevice.on('error', (err) => {
@@ -100,16 +103,15 @@ function getStringDescriptor(device, iDescriptor) {
  * Example:
  * - data[0]: Represents the key code or button identifier.
  * - data[1]: Represents the key state (e.g., 1 for pressed, 0 for released).
- * You may need to adjust this depending on your device's specific data format.
  */
 function handleHIDData(data) {
     const key = data[0]; // First byte may contain the key/button identifier
     const state = data[1]; // Second byte typically represents the state (pressed/released)
 
-    if (state === 1) {
+    if (state === '01') {
         // Key press detected, call the press action
         onPress(key);
-    } else if (state === 0) {
+    } else if (state === '00') {
         // Key release detected, call the release action
         onRelease(key);
     } else {
