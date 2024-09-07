@@ -23,7 +23,7 @@ threads.parentPort.on('message', message => {
             break;
     }
 
-    if(message.process){
+    if(message.process === true) {
         _promise = microphone.processRecording();
     }
 

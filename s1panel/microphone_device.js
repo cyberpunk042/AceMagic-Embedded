@@ -60,6 +60,7 @@ function stopRecording() {
 // Process the last recorded audio file using Whisper
 function processRecording() {
     return new Promise(async (fulfill, reject) => {
+        logger.info('Process Recording Being');
         try {
             if (!fs.existsSync(filePath)) {
                 return reject(new Error('No recorded audio file found.'));
