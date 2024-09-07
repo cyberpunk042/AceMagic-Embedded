@@ -41,12 +41,15 @@ ensure_bashrc_var "OPENAI_API_KEY" "$OPENAI_API_KEY"
 sudo apt update
 sudo apt install usbutils -y
 sudo apt install python3 python3-pip -y
+sudo apt install python3-full -y
 
 # GPT Prerequisite
-pip install gpt-command-line
+pip install gpt-command-line --break-system-packages
+## TODO: add /home/<user>/.local/bin to PATH (debian) e.g. export PATH="/home/selks-user/.local/bin:$PATH"
 
 # Node Version Manager (fnm)
-curl -FsSL https://fnm.vercel.app/install | bash
+curl -fsSL https://fnm.vercel.app/install | bash
+source $HOME/.bashrc
 fnm use --install-if-missing 20
 
 # Copy Node to static location

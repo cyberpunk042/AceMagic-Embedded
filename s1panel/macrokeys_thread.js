@@ -13,7 +13,7 @@ threads.parentPort.on('message', message => {
     var _promise = Promise.resolve();
 
     switch (message.listen) {
-        case True:
+        case true:
             _promise = macrokeys.listen();
             break;
     }

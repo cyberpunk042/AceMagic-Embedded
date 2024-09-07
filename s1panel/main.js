@@ -634,7 +634,7 @@ function microphone_thread_update_status(state, message) {
 
 
 function init_macrokeys_thread(state) {
-    state.macrokeys_thread.postMessage({ listen: True });
+    state.macrokeys_thread.postMessage({ listen: true });
     state.macrolistening = true;
 }
 
