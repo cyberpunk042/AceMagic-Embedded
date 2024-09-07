@@ -727,7 +727,8 @@ function main() {
                 // Listen to the microphone toggle for device interactions.
                 _state.macrokeys_thread.on('message', message => {
                     //TODO: TEST with this and see what we have in the log with the device.
-
+                    
+                    logger.info('received macrokeys_thread message: ' + JSON.stringify(message));
                     if(message.type == 'key' && message.action == 'press') {
                         microphone_thread_update_status(_state, { type: 'START'});
                     } else if(message.type == 'key' && message.action == 'release') {

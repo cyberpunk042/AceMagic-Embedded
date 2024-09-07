@@ -49,7 +49,7 @@ function initializeHIDDevices() {
                 device.on('data', (data) => {
                     // Convert raw data to readable format and handle HID data
                     const dataArray = Array.from(data).map(byte => byte.toString(16));
-                    logger.info(`Data received from ${deviceInfo.product}: ${dataArray}`);
+                    logger.debug(`Data received from ${deviceInfo.product}: ${dataArray}`);
                     handleHIDData(data, deviceInfo.product);
                 });
 
