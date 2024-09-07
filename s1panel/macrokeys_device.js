@@ -5,129 +5,86 @@
  * GPL-3 Licensed
  */
 
-const { usb, getDeviceList } = require('usb');
 const HID = require('node-hid');
+const usb = require('usb');
 const logger = require('./logger');
 
-// Specify the device name via environment variable
-const LOOKUP_DEVICE = process.env.MACRO_USB_DEVICE || 'SayoDevice';
-
+// Universal handling for any HID device
 async function listen() {
     try {
-        // Scan for already connected devices at startup
-        const devices = getDeviceList();
-        for (const device of devices) {
-            await handleDevice(device);
-        }
+        // Listen for existing devices
+        initializeHIDDevices();
 
         // Monitor USB devices being plugged in
-        usb.on('attach', async (device) => {
-            await handleDevice(device);
+        usb.on('attach', () => {
+            logger.info('USB device plugged in.');
+            initializeHIDDevices(); // Reinitialize devices when a new one is plugged in
         });
 
         // Monitor USB devices being removed
         usb.on('detach', (device) => {
-            logger.info('Device detached:', device.deviceDescriptor);
+            logger.info('USB device unplugged.');
+            // Optionally handle detachment logic here if needed
         });
 
     } catch (error) {
-        logger.error('Error in USB device monitoring:', error);
+        logger.error('Error in HID device monitoring:', error);
     }
 }
 
-// Handle device processing
-async function handleDevice(device) {
-    const deviceDescriptor = device.deviceDescriptor;
+// Initialize connected HID devices
+function initializeHIDDevices() {
+    // Get the list of all connected HID devices
+    const devices = HID.devices();
 
-    try {
-        const productName = await getStringDescriptor(device, deviceDescriptor.iProduct);
-        logger.info(`Device attached: ${productName}`);
-
-        if (productName && productName.includes(LOOKUP_DEVICE)) {
-            logger.info(`Matched device name: ${LOOKUP_DEVICE}`);
-
-            const vendorId = deviceDescriptor.idVendor;
-            const productId = deviceDescriptor.idProduct;
-
-            // Open HID device and listen for input
+    devices.forEach((deviceInfo) => {
+        // Check if the device is an input device (keyboard, macro keys, etc.)
+        if (deviceInfo.usagePage === 1 && deviceInfo.usage) {
             try {
-                const hidDevice = new HID.HID(vendorId, productId);
-                logger.info(`Opened device ${vendorId}:${productId}`);
+                const device = new HID.HID(deviceInfo.path);
+                logger.info(`Opened device: ${deviceInfo.product} (${deviceInfo.vendorId}:${deviceInfo.productId})`);
 
                 // Listen for data (key press/release)
-                hidDevice.on('data', (data) => {
-                    // Convert blob data to readable array
+                device.on('data', (data) => {
+                    // Convert raw data to readable format and handle HID data
                     const dataArray = Array.from(data).map(byte => byte.toString(16));
-                    logger.info(`Data received: ${dataArray}`);  // Log the data array for inspection
-
-                    handleHIDData(dataArray);
+                    logger.info(`Data received from ${deviceInfo.product}: ${dataArray}`);
+                    handleHIDData(data, deviceInfo.product);
                 });
 
-                hidDevice.on('error', (err) => {
-                    logger.error('HID error:', err);
+                device.on('error', (err) => {
+                    logger.error(`HID error on ${deviceInfo.product}:`, err);
                 });
             } catch (err) {
-                logger.error('Failed to open HID device:', err);
+                logger.error(`Failed to open HID device: ${deviceInfo.product}`, err);
             }
-        } else {
-            logger.info(`No match for device name ${LOOKUP_DEVICE}. Skipping ${productName}`);
-        }
-    } catch (error) {
-        logger.error('Error fetching product name:', error);
-    }
-}
-
-// Helper function to fetch string descriptor (iProduct contains the product name)
-function getStringDescriptor(device, iDescriptor) {
-    return new Promise((resolve, reject) => {
-        if (iDescriptor) {
-            device.open();
-            device.getStringDescriptor(iDescriptor, (error, data) => {
-                device.close();
-                if (error) {
-                    return reject(error);
-                }
-                resolve(data.toString());
-            });
-        } else {
-            resolve(null);
         }
     });
 }
 
-// Helper function to handle HID data and call specific functions for press/release
-/*
- * This function handles the raw data from the HID device and calls the appropriate function
- * depending on whether the key is pressed or released.
- *
- * Example:
- * - data[0]: Represents the key code or button identifier.
- * - data[1]: Represents the key state (e.g., 1 for pressed, 0 for released).
- */
-function handleHIDData(data) {
-    const key = data[0]; // First byte may contain the key/button identifier
-    const state = data[1]; // Second byte typically represents the state (pressed/released)
+// Universal function to handle HID data for any device
+function handleHIDData(data, deviceName) {
+    // Example: Assume that key presses are in the third byte (this may vary by device)
+    const key = data[2]; // Example byte for key/button identifier
 
-    if (state === '01') {
-        // Key press detected, call the press action
-        onPress(key);
-    } else if (state === '00') {
-        // Key release detected, call the release action
-        onRelease(key);
+    if (key !== 0) {
+        // Key press detected
+        onPress(key, deviceName);
     } else {
-        logger.info('Unknown state detected in HID data:', data);
+        // Key release detected
+        onRelease(deviceName);
     }
 }
 
 // Function to call on key press
-function onPress(key) {
-    logger.info(`Key ${key} pressed`);
+function onPress(key, deviceName) {
+    logger.info(`Key ${key} pressed on ${deviceName}`);
     // Add your custom logic for handling key press here
 }
 
 // Function to call on key release
-function onRelease(key) {
-    logger.info(`Key ${key} released`);
+function onRelease(deviceName) {
+    logger.info(`Key released on ${deviceName}`);
     // Add your custom logic for handling key release here
 }
 
