@@ -626,13 +626,16 @@ function microphone_thread_update_status(state, message) {
     // TODO: generate the messages inside the macrokey thread for the microphone thread
     // TODO: align with the internal functions and flexibility
     if (state.listening && 'END' === message.type) {
+        logger.info('ending listening');
         done_listening(state);
         //TODO: Update display with rec end icon
+        logger.info('process listening');
         process_recording(state);
         //TODO: Update display with translation in progress icon
         //TODO: Update display with sending to GPT in progress icon
         //TODO: Update display with received response, & etc
     } else if ('START' === message.type) {
+        logger.info('start listening');
         start_listening(state);
         //TODO: Update display with rec icon
     }

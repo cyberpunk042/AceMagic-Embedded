@@ -9,6 +9,7 @@ const microphone         = require('./microphone_device');
 const logger      = require('./logger');
 
 threads.parentPort.on('message', message => {
+    logger.info('microphone: ', JSON.stringify(message));
 
     var _promise = Promise.resolve();
 
