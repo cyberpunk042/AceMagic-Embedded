@@ -8,6 +8,7 @@
 const HID = require('node-hid');
 const usb = require('usb');
 const logger = require('./logger');
+const threads = require('worker_threads');
 
 // Universal handling for any HID device
 async function listen() {
@@ -79,13 +80,13 @@ function handleHIDData(data, deviceName) {
 // Function to call on key press
 function onPress(key, deviceName) {
     logger.info(`Key ${key} pressed on ${deviceName}`);
-    // Add your custom logic for handling key press here
+    threads.parentPort.postMessage({ type: 'key', action: 'press' });
 }
 
 // Function to call on key release
 function onRelease(deviceName) {
     logger.info(`Key released on ${deviceName}`);
-    // Add your custom logic for handling key release here
+    threads.parentPort.postMessage({ type: 'key', action: 'release' });
 }
 
 module.exports = {

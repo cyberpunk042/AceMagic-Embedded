@@ -13,13 +13,17 @@ threads.parentPort.on('message', message => {
     var _promise = Promise.resolve();
 
     switch (message.listen) {
-        case True:
-            _promise = microphone.listen();
+        case true:
+            _promise = microphone.startRecording();
             break;
 
-        case False:
-            _promise = microphone.stopListening();
+        case false:
+            _promise = microphone.stopRecording();
             break;
+    }
+
+    if(message.process){
+        _promise = microphone.processRecording();
     }
 
     return _promise;

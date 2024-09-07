@@ -610,23 +610,30 @@ function lcd_thread_status(state, theme, message) {
     }
 }
 
+function done_listening(state) {
+    state.microphone_thread.postMessage({ listen: false });
+    state.listening = false;
+}
+function start_listening(state) {
+    state.microphone_thread.postMessage({ listen: true });
+    state.listening = true;
+}
+function process_recording(state) {
+    state.microphone_thread.postMessage({ process: true });
+}
 
 function microphone_thread_update_status(state, message) {
     // TODO: generate the messages inside the macrokey thread for the microphone thread
     // TODO: align with the internal functions and flexibility
-    if (state.listening && message.complete) {
-        if ('END' === message.type) {
-            state.done_listening(state);
-            //TODO: Update display with rec end icon
-            state.translate_vocal(state);
-            //TODO: Update display with translation in progress icon
-            state.sendTextToGPTCli(state)
-            //TODO: Update display with sending to GPT in progress icon
-            state.listening = false;
-        }
+    if (state.listening && 'END' === message.type) {
+        done_listening(state);
+        //TODO: Update display with rec end icon
+        process_recording(state);
+        //TODO: Update display with translation in progress icon
+        //TODO: Update display with sending to GPT in progress icon
+        //TODO: Update display with received response, & etc
     } else if ('START' === message.type) {
-        state.listening = true;
-        state.start_listening(state);
+        start_listening(state);
         //TODO: Update display with rec icon
     }
 
@@ -720,7 +727,12 @@ function main() {
                 // Listen to the microphone toggle for device interactions.
                 _state.macrokeys_thread.on('message', message => {
                     //TODO: TEST with this and see what we have in the log with the device.
-                    microphone_thread_update_status(_state, message);
+
+                    if(message.type == 'key' && message.action == 'press') {
+                        microphone_thread_update_status(_state, { type: 'START'});
+                    } else if(message.type == 'key' && message.action == 'release') {
+                        microphone_thread_update_status(_state, { type: 'END'});
+                    }
                 });
 
                 // Track microphone device interactions responses.
