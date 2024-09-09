@@ -59,6 +59,8 @@ sudo cp $(which npm) /usr/bin/npm
 # Set Timezone
 timedatectl set-timezone $TIMEZONE
 
+sudo git config --global --add safe.directory /home/selks-user/AceMagic-Embedded
+
 # Audio Prerequisite
 pip3 install gtts
 sudo apt install ffmpeg alsa-utils -y

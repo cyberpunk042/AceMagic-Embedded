@@ -39,7 +39,7 @@ function startRecording() {
     });
 }
 
-// Stop recording process
+// Stop recording process 
 function stopRecording() {
     return new Promise((fulfill, reject) => {
         if (!isRecording) {
